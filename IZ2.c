@@ -3,16 +3,40 @@
 #include "string.h"
 
 enum {END, BAD_STRING} end;
-//enum {GOOD_BRACKETS, WAIT_BRACKET} brackets_state = GOOD_BRACKETS;
-size_t  num_of_brakets = 0;
 enum {OK, WAIT_NUMBER} symbol_state = WAIT_NUMBER;
 enum {POSITIVE, NEGATIVE} sign = POSITIVE;
 
 char str_of_number[80] = "";
+size_t  num_of_brakets = 0;
 
+int priority(char op);
+
+double calculate(char* str);
+
+void sub_result (double* numbers, size_t* num_ind, char* operations, size_t* op_ind);
+
+void get_number(char* str, size_t* index);
+
+char read(char* str, size_t* index);
+
+double calculate(char* str);
+
+int main() {
+    char buf[1024];
+    gets(buf);
+    double result = calculate(buf);
+
+    if (end == BAD_STRING) {
+        printf("[error]");
+    }
+    else {
+        printf("%.2f", result);
+    }
+
+    return 0;
+}
 
 int priority(char op) {
-
     if (op == '+') {
         return 0;
     }
@@ -75,7 +99,7 @@ char read(char* str, size_t* index) {
 
     while(str[*index] == ' '){
         ++(*index);
-    } //skip spaces
+    }
 
     switch(str[*index]) {
         case '(':
@@ -121,39 +145,24 @@ double calculate(char* str) {
     while( (elem = read(str, &index)) != '\0') {
         switch (elem) {
             case '(': {
-                //if (symbol_state == WAIT_NUMBER) {
-                //    brackets_state = WAIT_BRACKET;
                 ++num_of_brakets;
 
-                    numbers[num_ind] = calculate(&(str[index]));
-                    sub_result(numbers, &num_ind, operations, &op_ind);
+                numbers[num_ind] = calculate(&(str[index]));
+                sub_result(numbers, &num_ind, operations, &op_ind);
 
-                    char * offset = strchr(&(str[index]), ')');
+                char * offset = strchr(&(str[index]), ')');
 
-                    if (end == BAD_STRING || offset == NULL) {
-                        return 0;
-                    }
-                    else {
-                        index += offset - &(str[index]);
-                        str[index++] = ' ';
-                    }
-                //}
-                //else {
-                //    end = BAD_STRING;
-                //    return 0 ;
-                //}
-
+                if (end == BAD_STRING || offset == NULL) {
+                    return 0;
+                }
+                else {
+                    index += offset - &(str[index]);
+                    str[index++] = ' ';
+                }
 
                 break;
             }
             case ')': {
-                /*if (brackets_state == WAIT_BRACKET) {
-                    brackets_state = GOOD_BRACKETS;
-                }
-                else {
-                    end = BAD_STRING;
-                    return 0;
-                }*/
                 --num_of_brakets;
 
                 if (num_ind == 1){
@@ -233,19 +242,4 @@ double calculate(char* str) {
     }
 
     return result;
-}
-
-int main() {
-    char buf[1024];
-    gets(buf);
-    double result = calculate(buf);
-
-    if (end == BAD_STRING) {
-        printf("[error]");
-    }
-    else {
-        printf("%.2f", result);
-    }
-
-    return 0;
 }
