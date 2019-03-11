@@ -1,1 +1,1 @@
-# advanced_studying_of_C-C-
+# advanced_studying_of_C-C++
