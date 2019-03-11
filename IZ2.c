@@ -6,7 +6,7 @@
 
 enum {END, BAD_STRING} end;
 enum {OK, WAIT_NUMBER} symbol_state = WAIT_NUMBER;
-enum {POSITIVE, NEGATIVE} sign = POSITIVE;
+typedef enum {POSITIVE, NEGATIVE} _sign;
 
 size_t num_of_brackets = 0;
 
@@ -24,11 +24,11 @@ char read(char* str, size_t* index, char** str_of_number);
 
 void other_operation(char elem, char* operations, size_t op_ind);
 
-void minus_operation(char* operations, size_t op_ind, size_t num_ind);
+void minus_operation(char* operations, size_t op_ind, size_t num_ind, _sign* sign);
 
-void operation(char elem, char* operations, size_t op_ind, size_t num_ind);
+void operation(char elem, char* operations, size_t op_ind, size_t num_ind, _sign* sign);
 
-void make_number(char** str_of_number, double* numbers, size_t* num_ind, char* operations, size_t* op_ind);
+void make_number(char** str_of_number, double* numbers, size_t* num_ind, char* operations, size_t* op_ind, _sign* sign);
 
 void in_brackets(char* str, size_t* index, double* numbers, size_t* num_ind, char* operations, size_t* op_ind);
 
@@ -185,13 +185,13 @@ char read(char* str, size_t* index, char** str_of_number) {
     }
 }
 
-void minus_operation(char* operations, const size_t op_ind, const size_t num_ind) {
+void minus_operation(char* operations, const size_t op_ind, const size_t num_ind, _sign* sign) {
     symbol_state = WAIT_NUMBER;
-    if (sign == NEGATIVE) {
-        sign = POSITIVE;
+    if (*sign == NEGATIVE) {
+        *sign = POSITIVE;
     }
     else {
-        sign = NEGATIVE;
+        *sign = NEGATIVE;
     }
 
     if(num_ind != 0 ) {
@@ -209,25 +209,25 @@ void other_operation(const char elem, char* operations, const size_t op_ind) {
     }
 }
 
-void operation(const char elem, char* operations, const size_t op_ind, const size_t num_ind) {
+void operation(const char elem, char* operations, const size_t op_ind, const size_t num_ind, _sign* sign) {
     if (elem == '-') {
-        minus_operation(operations, op_ind, num_ind);
+        minus_operation(operations, op_ind, num_ind, sign);
     }
     else {
         other_operation(elem, operations, op_ind);
     }
 }
 
-void make_number(char** str_of_number, double* numbers, size_t* num_ind, char* operations, size_t* op_ind) {
+void make_number(char** str_of_number, double* numbers, size_t* num_ind, char* operations, size_t* op_ind, _sign* sign) {
     if (symbol_state == WAIT_NUMBER) {
         symbol_state = OK;
 
-        if (sign == POSITIVE) {
+        if (*sign == POSITIVE) {
             numbers[*num_ind] = atof(*str_of_number);
         }
         else {
             numbers[*num_ind] = negative(atof(*str_of_number));
-            sign = POSITIVE;
+            *sign = POSITIVE;
         }
 
         sub_result(numbers, num_ind, operations, op_ind);
@@ -276,6 +276,8 @@ double out_brackets(const double* numbers, const size_t num_ind) {
 }
 
 double calculate(char* str) {
+    _sign sign = POSITIVE;
+
     double result = 0;
     size_t index = 0;
 
@@ -293,6 +295,14 @@ double calculate(char* str) {
             case '(': {
                 in_brackets(str, &index, numbers, &num_ind, operations, &op_ind);
 
+                if (sign == NEGATIVE) {
+                    if (num_ind != 0) {
+                        numbers[num_ind - 1] = negative(numbers[num_ind - 1]);
+                    }
+                    else {
+                        numbers[num_ind] = negative(numbers[num_ind]);
+                    }
+                }
                 break;
             }
             case ')': {
@@ -302,12 +312,12 @@ double calculate(char* str) {
             case '+':
             case '*':
             case '/': {
-                operation(elem, operations, op_ind, num_ind);
+                operation(elem, operations, op_ind, num_ind, &sign);
 
                 break;
             }
             default: {
-                make_number(&str_of_number, numbers, &num_ind, operations, &op_ind);
+                make_number(&str_of_number, numbers, &num_ind, operations, &op_ind, &sign);
             }
         }
 
@@ -318,7 +328,6 @@ double calculate(char* str) {
 
     if (symbol_state == WAIT_NUMBER || num_of_brackets != 0) {
         end = BAD_STRING;
-        return 0;
     }
 
     if (end == BAD_STRING) {
