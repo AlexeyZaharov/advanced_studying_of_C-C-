@@ -1,63 +1,91 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int* find_max(int* num, size_t n, size_t m) {
-  int* max = calloc(m, sizeof(int));
+int* find_max(int* array, const size_t size_of_array, int* max, const size_t number_of_max);
+int* new_array (size_t* num);
+void fill_array (const size_t size_of_array, int* array);
 
-  for(size_t i = 0; i < m; ++i) {
-      for(size_t j = i + 1; j < n; ++j) {
-          if (num[j] > num[i]) {
-              int t = num[i];
-              num[i] = num[j];
-              num[j] = t;
+enum {ERROR, OK} success = OK;
+
+int main()
+{
+  size_t size_of_array = 0;
+  int* numbers = NULL;
+  int* max = NULL;
+
+  numbers = new_array(&size_of_array);
+
+  if (success != ERROR) {
+      fill_array(size_of_array, numbers);
+
+      if (success != ERROR) {
+          size_t size_of_max = 0;
+          max = new_array(&size_of_max);
+
+          if (size_of_max > size_of_array) {
+              success = ERROR;
+            }
+
+          if (success != ERROR) {
+              find_max (numbers, size_of_array, max, size_of_max);
+
+              for (size_t i = 0; i < size_of_max; ++i) {
+                  printf("%d ", max[i]);
+                }
             }
         }
-      max[i] = num[i];
+    }
+
+  if (success == ERROR){
+      printf("[error]");
+    }
+
+  free(numbers);
+  free(max);
+
+  return 0;
+}
+
+int* find_max(int* array, const size_t size_of_array, int* max, const size_t number_of_max) {
+  for(size_t i = 0; i < number_of_max; ++i) {
+      for(size_t j = i + 1; j < size_of_array; ++j) {
+          if (array[j] > array[i]) {
+              int t = array[i];
+              array[i] = array[j];
+              array[j] = t;
+            }
+        }
+      max[i] = array[i];
     }
 
   return max;
 }
 
-int main()
-{
-  size_t n = 0;
-  if(!scanf("%lu", &n) ) {
-    printf("[error]");
-    return 0;
+int* new_array (size_t* size) {
+  int* array = NULL;
+
+  if(scanf("%lu", size) ) {
+    array = calloc(*size, sizeof(int));
+  }
+
+  if (array == NULL) {
+      success = ERROR;
     }
 
-  int* numbers = calloc(n, sizeof(int));
+  return array;
+}
 
-  for (size_t i = 0; i < n; ++i) {
-      if(!scanf("%d", &numbers[i])) {
-        free(numbers);
-        printf("[error]");
-        return 0;
+void fill_array (const size_t size_of_array, int* array) {
+  for (size_t i = 0; i < size_of_array; ++i) {
+      if(!scanf("%d", &array[i])) {
+        success = ERROR;
+        break;
         }
-      char c;
+      char c = '\0';
       scanf("%c", &c);
-      if ((c == '\n' && i != n-1) || (c != '\n' && i == n-1)) {
-          free(numbers);
-          printf("[error]");
-          return 0;
+      if ((c == '\n' && i != size_of_array-1) || (c != '\n' && i == size_of_array-1)) {
+          success = ERROR;
+          break;
         }
       }
-
-  size_t m = 0;
-  if (!scanf("%lu", &m) || m>n) {
-     free(numbers);
-     printf("[error]");
-     return 0;
-     }
-
-  int* max = find_max(numbers, n, m);
-
-  for (size_t i = 0; i < m; ++i) {
-      printf("%d ", max[i]);
-    }
-
-  free(max);
-  free(numbers);
-
-  return 0;
 }
